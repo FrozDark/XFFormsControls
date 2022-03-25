@@ -264,7 +264,7 @@ namespace XFFormsControls.Controls
                 {
                     if (isHovered != value)
                     {
-                        if (value && (!IsClickable() || !_stepProgressBar.IsEnabled))
+                        if (value && !IsClickable())
                         {
                             return;
                         }
@@ -525,8 +525,6 @@ namespace XFFormsControls.Controls
                     {
                         canvas.DrawCircle(center, radius, _stepProgressBar.circleHover);
                     }
-
-                    var rect = SKRect.Create(center.X - radius, center.Y - radius, diameter, diameter);
 
                     _stepProgressBar.textPaint.Color = _stepProgressBar.newStepTextColor;
                     _stepProgressBar.textPaint.TextSize = _stepProgressBar._stepSequenceTextSize;
