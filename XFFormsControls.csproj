@@ -7,16 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\back.svg" />
+    <None Remove="Assets\check.svg" />
     <None Remove="Controls\DataGrid\down.png" />
     <None Remove="Controls\DataGrid\up.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Assets\back.svg" />
+    <EmbeddedResource Include="Assets\check.svg" />
     <EmbeddedResource Include="Resources\down.png" />
     <EmbeddedResource Include="Resources\up.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="SkiaSharp.Views.Forms" Version="2.80.3" />
     <PackageReference Include="Xamarin.CommunityToolkit" Version="1.3.2" />
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2291" />
   </ItemGroup>

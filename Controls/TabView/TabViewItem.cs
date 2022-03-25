@@ -6,13 +6,13 @@ using Xamarin.Forms;
 namespace XFFormsControls.Controls
 {
     [ContentProperty(nameof(Content))]
-    public class TabViewItem : TemplatedView
+    public class TabViewItem : View
     {
         public static readonly BindableProperty TextProperty = BindableProperty.Create("Text", typeof(string), typeof(TabViewItem), string.Empty);
 
         public static readonly BindableProperty TextColorProperty = BindableProperty.Create("TextColor", typeof(Color), typeof(TabViewItem), Color.Default, BindingMode.OneWay);
 
-        public static readonly BindableProperty TextColorSelectedProperty = BindableProperty.Create("TextColorSelected", typeof(Color), typeof(TabViewItem), Color.Default);
+        public static readonly BindableProperty TextColorSelectedProperty = BindableProperty.Create("TextColorSelected", typeof(Color), typeof(TabViewItem), Color.Default, BindingMode.OneWay);
 
         public static readonly BindableProperty FontSizeProperty = BindableProperty.Create("FontSize", typeof(double), typeof(TabViewItem), Device.GetNamedSize(NamedSize.Small, typeof(Label)), BindingMode.OneWay);
 
@@ -37,9 +37,9 @@ namespace XFFormsControls.Controls
 
         public static readonly BindableProperty IsSelectedProperty = BindableProperty.Create("IsSelected", typeof(bool), typeof(TabViewItem), false, BindingMode.OneWay);
 
-        public static readonly BindableProperty BadgeTextProperty = BindableProperty.Create("BadgeText", typeof(string), typeof(TabViewItem), string.Empty);
+        public static readonly BindableProperty BadgeTextProperty = BindableProperty.Create("BadgeText", typeof(string), typeof(TabViewItem), string.Empty, BindingMode.OneWay);
 
-        public static readonly BindableProperty BadgeTextColorProperty = BindableProperty.Create("BadgeTextColor", typeof(Color), typeof(TabViewItem), Color.Default);
+        public static readonly BindableProperty BadgeTextColorProperty = BindableProperty.Create("BadgeTextColor", typeof(Color), typeof(TabViewItem), Color.Default, BindingMode.OneWay);
 
         public static readonly BindableProperty BadgeBackgroundColorProperty = BindableProperty.Create("BadgeBackgroundColor", typeof(Color), typeof(TabViewItem), Color.Transparent, BindingMode.OneWay);
 
@@ -227,6 +227,12 @@ namespace XFFormsControls.Controls
             {
                 SetValue(ContentProperty, value);
             }
+        }
+
+        readonly Lazy<PlatformConfigurationRegistry<TabViewItem>> _platformConfigurationRegistry;
+        public TabViewItem()
+        {
+            _platformConfigurationRegistry = new Lazy<PlatformConfigurationRegistry<TabViewItem>>(() => new PlatformConfigurationRegistry<TabViewItem>(this));
         }
 
         protected override void OnBindingContextChanged()

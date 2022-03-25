@@ -88,8 +88,11 @@ namespace XFFormsControls.Controls
 
         public Command<TabViewItem> SelectCommand { get; }
 
+        readonly Lazy<PlatformConfigurationRegistry<TabView>> _platformConfigurationRegistry;
         public TabView()
         {
+            _platformConfigurationRegistry = new Lazy<PlatformConfigurationRegistry<TabView>>(() => new PlatformConfigurationRegistry<TabView>(this));
+
             InitializeComponent();
 
             SelectCommand = new Command<TabViewItem>((tabitem) =>
