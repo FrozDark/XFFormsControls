@@ -1,21 +1,25 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<ContentView xmlns="http://xamarin.com/schemas/2014/forms" 
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:xfcontrols="clr-namespace:XFFormsControls.Controls"
-             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
-             HorizontalOptions="Fill"
-             VerticalOptions="Fill"
-             x:Name="root"
-             x:Class="XFFormsControls.Controls.TabView">
-  <ContentView.Content>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ContentView
+    x:Class="XFFormsControls.Controls.TabView"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+    xmlns:xfcontrols="clr-namespace:XFFormsControls.Controls"
+    x:Name="root"
+    HorizontalOptions="Fill"
+    VerticalOptions="Fill">
+    <ContentView.Content>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="{Binding Path=TabStripHeight, Source={x:Reference root}, Mode=OneWay}"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="{Binding Path=TabStripHeight, Source={x:Reference root}, Mode=OneWay}" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <ScrollView Grid.Row="0" x:Name="tabStripScroller" Orientation="Horizontal"
-                        Padding="0,0,0,5">
+            <ScrollView
+                x:Name="tabStripScroller"
+                Grid.Row="0"
+                Padding="0,0,0,15"
+                Orientation="Horizontal">
                 <ScrollView.HorizontalScrollBarVisibility>
                     <OnPlatform x:TypeArguments="ScrollBarVisibility">
                         <On Platform="WPF,UWP" Value="Default" />
@@ -28,91 +32,110 @@
                         <On Platform="Android,iOS" Value="Never" />
                     </OnPlatform>
                 </ScrollView.VerticalScrollBarVisibility>
-                <FlexLayout x:Name="stripElementContent"
-                            Direction="Row" 
-                            JustifyContent="SpaceAround"
-                            AlignContent="Stretch"
-                            AlignItems="Stretch"
-                            Wrap="NoWrap"
-                            BackgroundColor="{Binding Path=TabStripBackgroundColor, Source={x:Reference root}, Mode=OneWay}"
-                            VerticalOptions="StartAndExpand"
-                            HorizontalOptions="FillAndExpand"
-                            BindableLayout.ItemsSource="{Binding Path=TabItems, Source={x:Reference root}}">
+                <FlexLayout
+                    x:Name="stripElementContent"
+                    AlignContent="Stretch"
+                    AlignItems="Stretch"
+                    BackgroundColor="{Binding Path=TabStripBackgroundColor, Source={x:Reference root}, Mode=OneWay}"
+                    BindableLayout.ItemsSource="{Binding Path=TabItems, Source={x:Reference root}}"
+                    Direction="Row"
+                    HorizontalOptions="FillAndExpand"
+                    JustifyContent="SpaceAround"
+                    VerticalOptions="StartAndExpand"
+                    Wrap="NoWrap">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate>
-                            <AbsoluteLayout HorizontalOptions="Fill" FlexLayout.AlignSelf="Stretch" FlexLayout.Grow="1">
+                            <AbsoluteLayout
+                                FlexLayout.AlignSelf="Stretch"
+                                FlexLayout.Grow="1"
+                                HorizontalOptions="Fill">
                                 <AbsoluteLayout.GestureRecognizers>
-                                    <TapGestureRecognizer NumberOfTapsRequired="1"
-                                                              Command="{Binding Path=SelectCommand, Source={x:Reference root}}"
-                                                              CommandParameter="{Binding .}"/>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Path=SelectCommand, Source={x:Reference root}}"
+                                        CommandParameter="{Binding .}"
+                                        NumberOfTapsRequired="1" />
                                 </AbsoluteLayout.GestureRecognizers>
 
                                 <AbsoluteLayout AbsoluteLayout.LayoutBounds="0.5,0.5,-1,1" AbsoluteLayout.LayoutFlags="PositionProportional,HeightProportional">
-                                    <Label AbsoluteLayout.LayoutBounds="0,0,1,1" AbsoluteLayout.LayoutFlags="All"
-                                           Text="{Binding Text}" 
-                                           TextColor="{Binding TextColor}"
-                                           FontSize="{Binding FontSize}"
-                                           FontAttributes="{Binding FontAttributes}"
-                                           FontFamily="{Binding FontFamily}"
-                                           Margin="20,0,20,0"
-                                           HorizontalOptions="Center" 
-                                           VerticalOptions="Center"
-                                           LineBreakMode="NoWrap">
+                                    <Label
+                                        Margin="20,0,20,0"
+                                        AbsoluteLayout.LayoutBounds="0,0,1,1"
+                                        AbsoluteLayout.LayoutFlags="All"
+                                        FontAttributes="{Binding FontAttributes}"
+                                        FontFamily="{Binding FontFamily}"
+                                        FontSize="{Binding FontSize}"
+                                        HorizontalOptions="Center"
+                                        LineBreakMode="NoWrap"
+                                        Text="{Binding Text}"
+                                        TextColor="{Binding TextColor}"
+                                        VerticalOptions="Center">
                                         <Label.Triggers>
-                                            <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
-                                                <Setter Property="TextColor" Value="{Binding TextColorSelected}"/>
-                                                <Setter Property="FontSize" Value="{Binding FontSizeSelected}"/>
-                                                <Setter Property="FontAttributes" Value="{Binding FontAttributesSelected}"/>
-                                                <Setter Property="FontFamily" Value="{Binding FontFamilySelected}"/>
+                                            <DataTrigger
+                                                Binding="{Binding IsSelected}"
+                                                TargetType="Label"
+                                                Value="True">
+                                                <Setter Property="TextColor" Value="{Binding TextColorSelected}" />
+                                                <Setter Property="FontSize" Value="{Binding FontSizeSelected}" />
+                                                <Setter Property="FontAttributes" Value="{Binding FontAttributesSelected}" />
+                                                <Setter Property="FontFamily" Value="{Binding FontFamilySelected}" />
                                             </DataTrigger>
                                         </Label.Triggers>
                                     </Label>
 
-                                    <Frame AbsoluteLayout.LayoutBounds="1,0" AbsoluteLayout.LayoutFlags="PositionProportional"
-                                           Padding="0"
-                                           CornerRadius="200"
-                                           IsClippedToBounds="True"
-                                           SizeChanged="Frame_SizeChanged"
-                                           BackgroundColor="{Binding Path=BadgeBackgroundColor}"
-                                           BorderColor="{Binding Path=BadgeBorderColor}">
+                                    <Frame
+                                        Padding="0"
+                                        AbsoluteLayout.LayoutBounds="1,0"
+                                        AbsoluteLayout.LayoutFlags="PositionProportional"
+                                        BackgroundColor="{Binding Path=BadgeBackgroundColor}"
+                                        BorderColor="{Binding Path=BadgeBorderColor}"
+                                        CornerRadius="200"
+                                        IsClippedToBounds="True"
+                                        SizeChanged="Frame_SizeChanged">
                                         <Frame.Triggers>
-                                            <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">
-                                                <Setter Property="BackgroundColor" Value="{Binding BadgeBackgroundColorSelected}"/>
-                                                <Setter Property="BorderColor" Value="{Binding BadgeBorderColorSelected}"/>
+                                            <DataTrigger
+                                                Binding="{Binding IsSelected}"
+                                                TargetType="Frame"
+                                                Value="True">
+                                                <Setter Property="BackgroundColor" Value="{Binding BadgeBackgroundColorSelected}" />
+                                                <Setter Property="BorderColor" Value="{Binding BadgeBorderColorSelected}" />
                                             </DataTrigger>
                                         </Frame.Triggers>
 
-                                        <Label Text="{Binding Path=BadgeText}"
-                                               TextColor="{Binding Path=BadgeTextColor}"
-                                               HorizontalOptions="Center"
-                                               VerticalOptions="Center"
-                                               FontSize="Micro"/>
+                                        <Label
+                                            FontSize="Micro"
+                                            HorizontalOptions="Center"
+                                            Text="{Binding Path=BadgeText}"
+                                            TextColor="{Binding Path=BadgeTextColor}"
+                                            VerticalOptions="Center" />
                                     </Frame>
                                 </AbsoluteLayout>
 
-                                <BoxView AbsoluteLayout.LayoutBounds="0,1,1,-1" AbsoluteLayout.LayoutFlags="PositionProportional,WidthProportional"
-                                             IsVisible="{Binding IsSelected}"
-                                             Color="{Binding Path=TabIndicatorColor, Source={x:Reference root}}" 
-                                             HeightRequest="{Binding Path=TabIndicatorHeight, Source={x:Reference root}}"/>
+                                <BoxView
+                                    AbsoluteLayout.LayoutBounds="0,1,1,-1"
+                                    AbsoluteLayout.LayoutFlags="PositionProportional,WidthProportional"
+                                    HeightRequest="{Binding Path=TabIndicatorHeight, Source={x:Reference root}}"
+                                    IsVisible="{Binding IsSelected}"
+                                    Color="{Binding Path=TabIndicatorColor, Source={x:Reference root}}" />
                             </AbsoluteLayout>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </FlexLayout>
             </ScrollView>
 
-            <xfcontrols:CarouselView Grid.Row="1"
-                                     Loop="False"
-                                     Position="{Binding Path=SelectedIndex, Source={x:Reference root}}"
-                                     ItemsSource="{Binding Path=TabItems, Source={x:Reference root}}"
-                                     AllowSwipeGestures="{Binding Path=IsSwipeEnabled, Source={x:Reference root}}">
+            <xfcontrols:CarouselView
+                Grid.Row="1"
+                AllowSwipeGestures="{Binding Path=IsSwipeEnabled, Source={x:Reference root}}"
+                ItemsSource="{Binding Path=TabItems, Source={x:Reference root}}"
+                Loop="False"
+                Position="{Binding Path=SelectedIndex, Source={x:Reference root}}">
                 <xfcontrols:CarouselView.ForwardAnimations>
                     <xfcontrols:CarouselSlideAnimation SlideInLength="100" SlideOutLength="100">
                         <xfcontrols:CarouselSlideAnimation.SlideIn>
-                            <xfcontrols:TranslationAnimation From="1,0" To="0,0"/>
+                            <xfcontrols:TranslationAnimation From="1,0" To="0,0" />
                         </xfcontrols:CarouselSlideAnimation.SlideIn>
 
                         <xfcontrols:CarouselSlideAnimation.SlideOut>
-                            <xfcontrols:TranslationAnimation From="0,0" To="-1,0"/>
+                            <xfcontrols:TranslationAnimation From="0,0" To="-1,0" />
                         </xfcontrols:CarouselSlideAnimation.SlideOut>
                     </xfcontrols:CarouselSlideAnimation>
                 </xfcontrols:CarouselView.ForwardAnimations>
@@ -120,20 +143,20 @@
                 <xfcontrols:CarouselView.BackwardAnimations>
                     <xfcontrols:CarouselSlideAnimation SlideInLength="100" SlideOutLength="100">
                         <xfcontrols:CarouselSlideAnimation.SlideIn>
-                            <xfcontrols:TranslationAnimation From="-1,0" To="0,0"/>
+                            <xfcontrols:TranslationAnimation From="-1,0" To="0,0" />
                         </xfcontrols:CarouselSlideAnimation.SlideIn>
 
                         <xfcontrols:CarouselSlideAnimation.SlideOut>
-                            <xfcontrols:TranslationAnimation From="0,0" To="1,0"/>
+                            <xfcontrols:TranslationAnimation From="0,0" To="1,0" />
                         </xfcontrols:CarouselSlideAnimation.SlideOut>
                     </xfcontrols:CarouselSlideAnimation>
                 </xfcontrols:CarouselView.BackwardAnimations>
                 <xfcontrols:CarouselView.ItemTemplate>
                     <DataTemplate>
-                        <ContentView Content="{Binding Content}"/>
+                        <ContentView Content="{Binding Content}" />
                     </DataTemplate>
                 </xfcontrols:CarouselView.ItemTemplate>
             </xfcontrols:CarouselView>
         </Grid>
-  </ContentView.Content>
+    </ContentView.Content>
 </ContentView>

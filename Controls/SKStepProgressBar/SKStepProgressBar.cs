@@ -358,7 +358,7 @@ namespace XFFormsControls.Controls
                                 textColor = _stepProgressBar.textColor;
                                 captionColor = _stepProgressBar.captionColor;
                             }
-                            if (IsDeleteAvailable() && _stepProgressBar.Mode == StepMode.Remove && State == StepState.None)
+                            if (_stepProgressBar.Mode == StepMode.Remove && State == StepState.None && IsDeleteAvailable())
                             {
                                 _stepProgressBar.circleBorder.Color = _stepProgressBar.color;
                                 _stepProgressBar.circleFill.Color = _stepProgressBar.color;
@@ -404,7 +404,7 @@ namespace XFFormsControls.Controls
 
                 SKRect textBounds = new SKRect();
 
-                if (_stepProgressBar.Mode == StepMode.Remove && IsDeleteAvailable() && State == StepState.None)
+                if (_stepProgressBar.Mode == StepMode.Remove && State == StepState.None && IsDeleteAvailable())
                 {
                     text = "_";
                     _stepProgressBar.textPaint.Color = textColor;
@@ -1535,15 +1535,18 @@ namespace XFFormsControls.Controls
             BatchInvalidationBegin();
 
             _items.Clear();
-            foreach (var item in newValue)
+            if (!(newValue is null))
             {
-                var handler = new StepItemHandler(item)
+                foreach (var item in newValue)
                 {
-                    CaptionBindingPath = CaptionProperty,
-                    CanBeDeletedBindingPath = CanBeDeletedProperty,
-                    IsMandatoryBindingPath = IsMandatoryProperty,
-                };
-                _items.Add(handler);
+                    var handler = new StepItemHandler(item)
+                    {
+                        CaptionBindingPath = CaptionProperty,
+                        CanBeDeletedBindingPath = CanBeDeletedProperty,
+                        IsMandatoryBindingPath = IsMandatoryProperty,
+                    };
+                    _items.Add(handler);
+                }
             }
             _items.MeasureAll();
 

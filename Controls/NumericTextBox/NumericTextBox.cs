@@ -351,7 +351,7 @@ namespace XFFormsControls.Controls
                     base.OnTextChanged(oldValue, newValue);
                 }
             }
-            else
+            else if (newValue != "-")
             {
                 //_ignoreTextChange = true;
                 base.Text = oldValue;

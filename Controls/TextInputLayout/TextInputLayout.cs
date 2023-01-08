@@ -9,39 +9,75 @@ namespace XFFormsControls.Controls
     [ContentProperty(nameof(InputView))]
     public class TextInputLayout : Layout, IPaddingElement
     {
-        public static readonly BindableProperty HintProperty = BindableProperty.Create(nameof(Hint), typeof(string), typeof(TextInputLayout), propertyChanged: TextPropertyChanged);
+        public static readonly BindableProperty HintProperty = BindableProperty.Create(nameof(Hint), typeof(string), typeof(TextInputLayout), propertyChanged: (b, o, n) =>
+        {
+            ((TextInputLayout)b).HintTextPropertyChanged((string)o, (string)n);
+        });
         public static readonly BindableProperty HintScaleProperty = BindableProperty.Create(nameof(HintScale), typeof(double), typeof(TextInputLayout), 0.9);
-        public static readonly BindableProperty HelperTextProperty = BindableProperty.Create(nameof(HelperText), typeof(string), typeof(TextInputLayout), propertyChanged: TextPropertyChanged);
+        public static readonly BindableProperty HintLabelStyleProperty = BindableProperty.Create(nameof(HintLabelStyle), typeof(TextInputLayoutLabelStyle), typeof(TextInputLayout), new TextInputLayoutLabelStyle() { FontAttributes = FontAttributes.Bold }, propertyChanged: (b, o, n) =>
+        {
+            ((TextInputLayout)b).StyleChangedProperty((TextInputLayoutLabelStyle)o, (TextInputLayoutLabelStyle)n);
+        });
+        public static readonly BindableProperty HelperTextProperty = BindableProperty.Create(nameof(HelperText), typeof(string), typeof(TextInputLayout), propertyChanged: (b, o, n) =>
+        {
+            ((TextInputLayout)b).HelperTextPropertyChanged((string)o, (string)n);
+        });
+        public static readonly BindableProperty HelperTextColorProperty = BindableProperty.Create(nameof(HelperTextColor), typeof(Color), typeof(TextInputLayout), Color.Gray, propertyChanged: (b, o, n) =>
+        {
+            ((TextInputLayout)b).HelperTextColorPropertyChanged((Color)o, (Color)n);
+        });
+        public static readonly BindableProperty HelperLabelStyleProperty = BindableProperty.Create(nameof(HelperLabelStyle), typeof(TextInputLayoutLabelStyle), typeof(TextInputLayout), new TextInputLayoutLabelStyle() {  FontSize = 11 }, propertyChanged: (b, o, n) =>
+        {
+            ((TextInputLayout)b).StyleChangedProperty((TextInputLayoutLabelStyle)o, (TextInputLayoutLabelStyle)n);
+        });
+        public static readonly BindableProperty ErrorTextProperty = BindableProperty.Create(nameof(ErrorText), typeof(string), typeof(TextInputLayout), propertyChanged: (b, o, n) =>
+        {
+            ((TextInputLayout)b).ErrorTextPropertyChanged((string)o, (string)n);
+        });
+        public static readonly BindableProperty ErrorTextColorProperty = BindableProperty.Create(nameof(ErrorTextColor), typeof(Color), typeof(TextInputLayout), Color.Red, propertyChanged: (b, o, n) =>
+        {
+            ((TextInputLayout)b).ErrorTextColorPropertyChanged((Color)o, (Color)n);
+        });
         public static readonly BindableProperty FocusedColorProperty = BindableProperty.Create(nameof(FocusedColor), typeof(Color), typeof(TextInputLayout), Color.FromHex("#00AFA0"));
         public static readonly BindableProperty UnfocusedColorProperty = BindableProperty.Create(nameof(UnfocusedColor), typeof(Color), typeof(TextInputLayout), Color.Silver);
-        public static readonly BindableProperty HelperTextColorProperty = BindableProperty.Create(nameof(HelperTextColor), typeof(Color), typeof(TextInputLayout));
-        public static readonly BindableProperty HintLabelStyleProperty = BindableProperty.Create(nameof(HintLabelStyle), typeof(TextInputLayoutLabelStyle), typeof(TextInputLayout), new TextInputLayoutLabelStyle() { FontAttributes = FontAttributes.Bold }, propertyChanged: TextStylePropertyChanged);
 
-        public static readonly BindableProperty HelperLabelStyleProperty = BindableProperty.Create(nameof(HelperLabelStyle), typeof(TextInputLayoutLabelStyle), typeof(TextInputLayout), new TextInputLayoutLabelStyle() {  FontSize = 11 }, propertyChanged: TextStylePropertyChanged);
-
-        private static void TextPropertyChanged(BindableObject bindable, object oldValue, object newValue)
+        private void HintTextPropertyChanged(string oldValue, string newValue)
         {
-            if (bindable is TextInputLayout inputLayout)
-            {
-                if (string.IsNullOrEmpty((string)oldValue) || string.IsNullOrEmpty((string)newValue))
-                {
-                    inputLayout.InvalidateLayout();
-                }
-            }
-        }
-        private static void TextStylePropertyChanged(BindableObject bindable, object oldValue, object newValue)
-        {
-            if (bindable is TextInputLayout inputLayout)
-            {
-                inputLayout.StyleChangedProperty((TextInputLayoutLabelStyle)oldValue, (TextInputLayoutLabelStyle)newValue);
-            }
+            _hintTextLabel.Value.Text = newValue;
         }
 
-
-        public double HintScale
+        private void HelperTextPropertyChanged(string oldValue, string newValue)
         {
-            get => (double)GetValue(HintScaleProperty);
-            set => SetValue(HintScaleProperty, value);
+            UpdateHelperText();
+        }
+
+        private void HelperTextColorPropertyChanged(Color oldValue, Color newValue)
+        {
+            UpdateHelperText();
+        }
+
+        private void ErrorTextPropertyChanged(string oldValue, string newValue)
+        {
+            UpdateHelperText();
+        }
+
+        private void ErrorTextColorPropertyChanged(Color oldValue, Color newValue)
+        {
+            UpdateHelperText();
+        }
+
+        private void UpdateHelperText()
+        {
+            if (string.IsNullOrEmpty(ErrorText))
+            {
+                _helperTextLabel.Value.Text = HelperText;
+                _helperTextLabel.Value.TextColor = HelperTextColor;
+            }
+            else
+            {
+                _helperTextLabel.Value.Text = ErrorText;
+                _helperTextLabel.Value.TextColor = ErrorTextColor;
+            }
         }
 
         public string Hint
@@ -49,11 +85,49 @@ namespace XFFormsControls.Controls
             get => (string)GetValue(HintProperty);
             set => SetValue(HintProperty, value);
         }
+
+        public TextInputLayoutLabelStyle HintLabelStyle
+        {
+            get => (TextInputLayoutLabelStyle)GetValue(HintLabelStyleProperty);
+            set => SetValue(HintLabelStyleProperty, value);
+        }
+
+        public double HintScale
+        {
+            get => (double)GetValue(HintScaleProperty);
+            set => SetValue(HintScaleProperty, value);
+        }
+
         public string HelperText
         {
             get => (string)GetValue(HelperTextProperty);
             set => SetValue(HelperTextProperty, value);
         }
+
+        public Color HelperTextColor
+        {
+            get => (Color)GetValue(HelperTextColorProperty);
+            set => SetValue(HelperTextColorProperty, value);
+        }
+
+        public TextInputLayoutLabelStyle HelperLabelStyle
+        {
+            get => (TextInputLayoutLabelStyle)GetValue(HelperLabelStyleProperty);
+            set => SetValue(HelperLabelStyleProperty, value);
+        }
+
+        public string ErrorText
+        {
+            get => (string)GetValue(ErrorTextProperty);
+            set => SetValue(ErrorTextProperty, value);
+        }
+
+        public Color ErrorTextColor
+        {
+            get => (Color)GetValue(ErrorTextColorProperty);
+            set => SetValue(ErrorTextColorProperty, value);
+        }
+
         public Color FocusedColor
         {
             get => (Color)GetValue(FocusedColorProperty);
@@ -64,29 +138,13 @@ namespace XFFormsControls.Controls
             get => (Color)GetValue(UnfocusedColorProperty);
             set => SetValue(UnfocusedColorProperty, value);
         }
-        public Color HelperTextColor
-        {
-            get => (Color)GetValue(HelperTextColorProperty);
-            set => SetValue(HelperTextColorProperty, value);
-        }
-
-        public TextInputLayoutLabelStyle HintLabelStyle
-        {
-            get => (TextInputLayoutLabelStyle)GetValue(HintLabelStyleProperty);
-            set => SetValue(HintLabelStyleProperty, value);
-        }
-
-        public TextInputLayoutLabelStyle HelperLabelStyle
-        {
-            get => (TextInputLayoutLabelStyle)GetValue(HelperLabelStyleProperty);
-            set => SetValue(HelperLabelStyleProperty, value);
-        }
 
         private ObservableCollection<Element> ChildsInternal { get => (ObservableCollection<Element>)Children; }
 
         private InputView _inputView = null;
         private Lazy<Label> _hintTextLabel;
         private Lazy<Label> _helperTextLabel;
+        private Lazy<Label> _textLengthLabel;
 
         public InputView InputView
         {
@@ -104,13 +162,9 @@ namespace XFFormsControls.Controls
                 Label label = new Label()
                 {
                     InputTransparent = true,
-                    VerticalTextAlignment = TextAlignment.Center
+                    VerticalTextAlignment = TextAlignment.Center,
+                    LineBreakMode = LineBreakMode.NoWrap
                 };
-                label.SetBinding(Label.TextProperty, new Binding()
-                {
-                    Path = nameof(Hint),
-                    Source = this
-                });
                 label.SetBinding(Label.FontAttributesProperty, new Binding()
                 {
                     Path = $"{nameof(HintLabelStyle)}.{nameof(TextInputLayoutLabelStyle.FontAttributes)}",
@@ -148,13 +202,9 @@ namespace XFFormsControls.Controls
                 Label label = new Label()
                 {
                     InputTransparent = true,
-                    VerticalTextAlignment = TextAlignment.Center
+                    VerticalTextAlignment = TextAlignment.Center,
+                    LineBreakMode = LineBreakMode.NoWrap
                 };
-                label.SetBinding(Label.TextProperty, new Binding()
-                {
-                    Path = nameof(HelperText),
-                    Source = this
-                });
                 label.SetBinding(Label.FontAttributesProperty, new Binding()
                 {
                     Path = $"{nameof(HelperLabelStyle)}.{nameof(TextInputLayoutLabelStyle.FontAttributes)}",
@@ -170,11 +220,39 @@ namespace XFFormsControls.Controls
                     Path = $"{nameof(HelperLabelStyle)}.{nameof(TextInputLayoutLabelStyle.FontSize)}",
                     Source = this
                 });
-                label.SetBinding(Label.TextColorProperty, new Binding()
+
+                return label;
+            });
+
+            _textLengthLabel = new Lazy<Label>(() =>
+            {
+                Label label = new Label()
                 {
-                    Path = nameof(HelperTextColor),
+                    InputTransparent = true,
+                    VerticalTextAlignment = TextAlignment.Center,
+                    LineBreakMode = LineBreakMode.NoWrap,
+                    TextColor = Color.Gray
+                };
+                label.SetBinding(Label.FontAttributesProperty, new Binding()
+                {
+                    Path = $"{nameof(HelperLabelStyle)}.{nameof(TextInputLayoutLabelStyle.FontAttributes)}",
                     Source = this
                 });
+                label.SetBinding(Label.FontFamilyProperty, new Binding()
+                {
+                    Path = $"{nameof(HelperLabelStyle)}.{nameof(TextInputLayoutLabelStyle.FontFamily)}",
+                    Source = this
+                });
+                label.SetBinding(Label.FontSizeProperty, new Binding()
+                {
+                    Path = $"{nameof(HelperLabelStyle)}.{nameof(TextInputLayoutLabelStyle.FontSize)}",
+                    Source = this
+                });
+                //label.SetBinding(Label.TextColorProperty, new Binding()
+                //{
+                //    Path = nameof(HelperTextColor),
+                //    Source = this
+                //});
 
                 return label;
             });
@@ -198,22 +276,41 @@ namespace XFFormsControls.Controls
             {
                 ChildsInternal.Add(_hintTextLabel.Value);
                 ChildsInternal.Add(_helperTextLabel.Value);
+                ChildsInternal.Add(_textLengthLabel.Value);
             }
 
             _inputView = view;
+            _textLengthLabel.Value.IsVisible = _inputView.MaxLength < int.MaxValue;
             ChildsInternal.Insert(0, _inputView);
 
             _inputView.TextChanged += InputView_TextChanged;
             _inputView.Focused += InputView_Focused;
             _inputView.Unfocused += InputView_Unfocused;
+            _inputView.PropertyChanged += InputView_PropertyChanged;
 
             InvalidateLayout();
             UpdateHintFloat();
+            UpdateTextLengthText();
+        }
+
+        private void InputView_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(InputView.MaxLength))
+            {
+                _textLengthLabel.Value.IsVisible = InputView.MaxLength < int.MaxValue;
+                UpdateTextLengthText();
+            }
         }
 
         private void InputView_TextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateHintFloat();
+            UpdateTextLengthText();
+        }
+
+        private void UpdateTextLengthText()
+        {
+            _textLengthLabel.Value.Text = $"{_inputView?.Text?.Length ?? 0} / {_inputView?.MaxLength ?? 0}";
         }
 
         private void UpdateHintFloat()
@@ -307,15 +404,13 @@ namespace XFFormsControls.Controls
                 SizeRequest size = _inputView.Measure(width, height);
 
                 double hintHeight = 0;
-                if (!string.IsNullOrEmpty(Hint))
                 {
                     Label _hintLabel = _hintTextLabel.Value;
-                    SizeRequest _hintSize = _hintLabel.Measure(width, height);
+                    SizeRequest _hintSize = _hintLabel.Measure(width, height, MeasureFlags.IncludeMargins);
                     hintHeight = _hintSize.Request.Height * HintScale;
 
-                    _hintLabel.Layout(new Rectangle(x + 10, y + hintHeight, _hintSize.Request.Width, Math.Max(size.Request.Height, _hintSize.Request.Height)));
+                    _hintLabel.Layout(new Rectangle(x + 10, y + hintHeight, _hintSize.Request.Width, Math.Min(size.Request.Height, _hintSize.Request.Height)));
                 }
-                if (!string.IsNullOrEmpty(HelperText))
                 {
                     Label _helperLabel = _helperTextLabel.Value;
                     SizeRequest _helperSize = _helperLabel.Measure(width, height);
@@ -325,10 +420,20 @@ namespace XFFormsControls.Controls
 
                     _helperLabel.Layout(new Rectangle(x + 10, size.Request.Height + hintHeight, _helperWidth, _helperHeight));
                 }
+                {
+                    Label _lengthLabel = _textLengthLabel.Value;
+                    SizeRequest _size = _lengthLabel.Measure(width, height);
 
-                _inputView.Layout(new Rectangle(x, y + hintHeight, width, size.Request.Height));
+                    double _width = Math.Min(_size.Request.Width, width);
+                    double _height = Math.Min(_size.Request.Height, height);
+
+                    _lengthLabel.Layout(new Rectangle(x + width - _width, size.Request.Height + hintHeight, _width, _height));
+                }
+
+                _inputView.Layout(new Rectangle(x, y + hintHeight, width, Math.Min(size.Request.Height, height)));
 
                 UpdateHintFloat();
+                UpdateTextLengthText();
             }
         }
 
@@ -336,7 +441,7 @@ namespace XFFormsControls.Controls
         {
             if (oldStyle != null)
             {
-                oldStyle.PropertyChanged += TextStyle_PropertyChanged;
+                oldStyle.PropertyChanged -= TextStyle_PropertyChanged;
             }
             if (newStyle != null)
             {

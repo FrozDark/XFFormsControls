@@ -11,10 +11,16 @@ using Xamarin.Forms.Xaml;
 namespace XFFormsControls.Controls
 {
     [ContentProperty(nameof(Content))]
-    public class Popup : Layout
+    public class Popup : Layout<View>
     {
         public static readonly BindableProperty ContentProperty = BindableProperty.Create(nameof(Content), typeof(View), typeof(Popup), null, propertyChanged: OnContentPropertyChanged);
-        public static readonly BindableProperty CloseOnBackgroundTapProperty = BindableProperty.Create(nameof(CloseOnBackgroundTap), typeof(bool), typeof(Popup), true);
+        public static readonly BindableProperty OnePopupOnlyProperty = BindableProperty.Create(nameof(OnePopupOnly), typeof(bool), typeof(Popup), true);
+        public static readonly BindablePropertyKey HideAllCommandPropertyKey = BindableProperty.CreateReadOnly(nameof(HideAllCommand), typeof(ICommand), typeof(Popup), null, defaultValueCreator: (b) =>
+        {
+            Popup popup = (Popup)b;
+            return new Command(popup.HideAll);
+        });
+        public static readonly BindableProperty HideAllCommandProperty = HideAllCommandPropertyKey.BindableProperty;
 
         public ObservableCollection<PopupContentView> Popups { get; } = new ObservableCollection<PopupContentView>();
 
@@ -24,41 +30,41 @@ namespace XFFormsControls.Controls
 
             if (oldValue != null)
             {
-                _ = popup.ChildsInternal.Remove((View)oldValue);
+                _ = popup.Children.Remove((View)oldValue);
             }
             if (newValue != null)
             {
-                popup.ChildsInternal.Insert(0, (View)newValue);
+                popup.Children.Insert(0, (View)newValue);
             }
         }
-
 
         public View Content
         {
             get => (View)GetValue(ContentProperty);
             set => SetValue(ContentProperty, value);
         }
-        public bool CloseOnBackgroundTap
+
+        public bool OnePopupOnly
         {
-            get => (bool)GetValue(CloseOnBackgroundTapProperty);
-            set => SetValue(CloseOnBackgroundTapProperty, value);
+            get => (bool)GetValue(OnePopupOnlyProperty);
+            set => SetValue(OnePopupOnlyProperty, value);
         }
-        public Command HideAllCommand { get; }
 
-        private IList<Element> ChildsInternal { get => (IList<Element>)Children; }
+        public ICommand HideAllCommand { get => (ICommand)GetValue(HideAllCommandProperty); }
 
-        private BoxView _background;
+        private BoxView _background = new BoxView()
+        {
+            IsVisible = false,
+            Color = Color.Black,
+            Opacity = 0.8
+        };
+        private bool _ignoreStack = false;
+
+        private readonly Lazy<PlatformConfigurationRegistry<Popup>> _platformConfigurationRegistry;
 
         public Popup()
         {
-            HideAllCommand = new Command(HideAll);
-
-            _background = new BoxView()
-            {
-                IsVisible = false,
-                Color = Color.Black,
-                Opacity = 0.8
-            };
+            _platformConfigurationRegistry = new Lazy<PlatformConfigurationRegistry<Popup>>(() => new PlatformConfigurationRegistry<Popup>(this));
 
             TapGestureRecognizer backgroundGesture = new TapGestureRecognizer()
             {
@@ -69,7 +75,7 @@ namespace XFFormsControls.Controls
 
             _background.GestureRecognizers.Add(backgroundGesture);
 
-            ChildsInternal.Add(_background);
+            Children.Add(_background);
 
             Popups.CollectionChanged += Popups_CollectionChanged;
         }
@@ -87,50 +93,47 @@ namespace XFFormsControls.Controls
                                 throw new InvalidOperationException("PopupContentView belongs to another popup control!");
                             }
 
-                            item.IsVisible = false;
-                            ChildsInternal.Add(item);
-
-                            item.Popup = this;
-
-                            if (item.IsPresented)
-                            {
-                                Show(item);
-                            }
+                            Children.Add(item);
                         }
                         break;
                     }
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     {
+                        _ignoreStack = true;
                         foreach (PopupContentView item in e.OldItems)
                         {
                             if (item.IsPresented)
                             {
                                 Hide(item);
                             }
-                            ChildsInternal.Remove(item);
-                            item.Popup = null;
+                            Children.Remove(item);
                         }
+                        _ignoreStack = false;
+                        CheckShownPopups();
                         break;
                     }
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
                     {
-                        foreach (PopupContentView item in ChildsInternal.OfType<PopupContentView>().ToArray())
+                        _ignoreStack = true;
+                        foreach (PopupContentView item in Children.OfType<PopupContentView>().ToArray())
                         {
                             if (item.IsPresented)
                             {
                                 Hide(item);
                             }
-                            item.Popup = null;
-                            ChildsInternal.Remove(item);
+                            Children.Remove(item);
                         }
+                        _ignoreStack = false;
+                        _background.IsVisible = false;
                         break;
                     }
             }
         }
 
+        private double _backgroundFade = 0.8;
         public void Show(PopupContentView popup)
         {
-            if (popup == null)
+            if (popup is null)
             {
                 throw new ArgumentNullException(nameof(popup));
             }
@@ -139,8 +142,53 @@ namespace XFFormsControls.Controls
                 throw new InvalidOperationException("Popup is not owned");
             }
 
-            popup.IsVisible = true;
-            _background.IsVisible = true;
+            if (OnePopupOnly)
+            {
+                HideAll(popup, false);
+            }
+
+            if (popup.FadeBackground || popup.CloseOnBackgroundTap)
+            {
+                _background.IsVisible = true;
+                RaiseChild(_background);
+
+                if (popup.FadeBackground)
+                {
+                    if (_background.Opacity < _backgroundFade)
+                    {
+                        _background.Opacity = 0;
+                        if (popup.TransitionAnimation != null)
+                        {
+                            _background.FadeTo(_backgroundFade, popup.TransitionAnimation.Length);
+                        }
+                        else
+                        {
+                            _background.Opacity = _backgroundFade;
+                        }
+                    }
+                }
+                else
+                {
+                    _background.Opacity = 0;
+                }
+            }
+
+            //if (!_background.IsVisible && (FadeBackground || CloseOnBackgroundTap))
+            //{
+            //    _background.Opacity = 0;
+            //    _background.IsVisible = true;
+            //    if (FadeBackground)
+            //    {
+            //        if (popup.TransitionAnimation != null)
+            //        {
+            //            _background.FadeTo(_backgroundFade, popup.TransitionAnimation.Length);
+            //        }
+            //        else
+            //        {
+            //            _background.Opacity = _backgroundFade;
+            //        }
+            //    }
+            //}
 
             RaiseChild(popup);
             popup.OnPopupShown();
@@ -148,7 +196,7 @@ namespace XFFormsControls.Controls
 
         public void Hide(PopupContentView popup)
         {
-            if (popup == null)
+            if (popup is null)
             {
                 throw new ArgumentNullException(nameof(popup));
             }
@@ -157,52 +205,102 @@ namespace XFFormsControls.Controls
                 throw new InvalidOperationException("Popup is not owned");
             }
 
-            popup.IsVisible = false;
-
-            IEnumerable<PopupContentView> popupStack = ChildsInternal.OfType<PopupContentView>().Where(c => c.IsPresented);
-
-            if (popupStack.Count() == 0)
+            if (!_ignoreStack)
             {
-                _background.IsVisible = false;
-            }
-            else
-            {
-                RaiseChild(popupStack.Last());
+                CheckShownPopups();
             }
 
             popup.OnPopupHidden();
         }
 
-        public void Toggle(PopupContentView popup)
+        private void CheckShownPopups()
         {
-            if (popup == null)
-            {
-                throw new ArgumentNullException(nameof(popup));
-            }
-            if (!Popups.Contains(popup))
-            {
-                throw new InvalidOperationException("Popup is not owned");
-            }
+            IEnumerable<PopupContentView> popupStack = Children.OfType<PopupContentView>().Where(c => c.IsPresented);
 
-            popup.IsPresented = !popup.IsPresented;
+            if (popupStack.Count() == 0)
+            {
+                _background.IsVisible = false;
+                _background.Opacity = 0;
+            }
+            else
+            {
+                bool hasFade = popupStack.Any(c => c.FadeBackground);
+                bool hasCloseBackground = popupStack.Any(c => c.CloseOnBackgroundTap);
+
+                if (!hasFade && !hasCloseBackground)
+                {
+                    _background.IsVisible = false;
+                }
+                else if (!hasFade && _background.Opacity > 0)
+                {
+                    _background.FadeTo(0);
+                }
+
+                PopupContentView lastPopup = popupStack.Last();
+
+                if (lastPopup.CloseOnBackgroundTap || lastPopup.FadeBackground)
+                {
+                    RaiseChild(_background);
+                }
+
+                RaiseChild(lastPopup);
+            }
         }
 
         public void HideAll()
         {
-            foreach (PopupContentView view in ChildsInternal.OfType<PopupContentView>())
+            HideAll(null, true);
+        }
+
+        private void HideAll(PopupContentView ignore, bool removeFade = true)
+        {
+            _ignoreStack = true;
+            foreach (PopupContentView view in Children.OfType<PopupContentView>())
             {
-                view.IsPresented = false;
+                if (view != ignore)
+                {
+                    view.IsPresented = false;
+                }
             }
+            if (removeFade)
+            {
+                _background.IsVisible = false;
+            }
+            _ignoreStack = false;
         }
 
         private void Background_Tapped(object sender, EventArgs e)
         {
-            if (CloseOnBackgroundTap)
+            PopupContentView lastShownPopup = Children.OfType<PopupContentView>().LastOrDefault(c => c.IsPresented);
+            if (lastShownPopup.CloseOnBackgroundTap)
             {
-                foreach (PopupContentView view in ChildsInternal.OfType<PopupContentView>())
+                lastShownPopup.Hide();
+            }
+        }
+
+        protected override void OnAdded(View view)
+        {
+            base.OnAdded(view);
+
+            if (view is PopupContentView popup)
+            {
+                popup.Popup = this;
+                popup.IsVisible = false;
+
+                if (popup.IsPresented)
                 {
-                    view.IsPresented = false;
+                    Show(popup);
                 }
+            }
+        }
+
+        protected override void OnRemoved(View view)
+        {
+            base.OnRemoved(view);
+
+            if (view is PopupContentView popup)
+            {
+                popup.Popup = null;
             }
         }
 
@@ -224,7 +322,7 @@ namespace XFFormsControls.Controls
 
             _background.Layout(fullScreen);
 
-            foreach (PopupContentView view in ChildsInternal.OfType<PopupContentView>())
+            foreach (PopupContentView view in Children.OfType<PopupContentView>())
             {
                 SizeRequest size = view.Measure(width, height);
 
@@ -244,7 +342,8 @@ namespace XFFormsControls.Controls
                 double actualWidth = Math.Min(neededWidth, width);
                 double actualHeight = Math.Min(neededHeight, height);
 
-                LayoutChildIntoBoundingRegion(view, new Rectangle(width / 2 - actualWidth / 2, height / 2 - actualHeight / 2, actualWidth, actualHeight));
+                //LayoutChildIntoBoundingRegion(view, new Rectangle(width / 2 - actualWidth / 2, height / 2 - actualHeight / 2, actualWidth, actualHeight));
+                LayoutChildIntoBoundingRegion(view, fullScreen);
             }
         }
     }

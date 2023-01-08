@@ -16,6 +16,26 @@ namespace XFFormsControls.Controls
         public static readonly BindableProperty OnShowCommandParameterProperty = BindableProperty.Create(nameof(OnShowCommandParameter), typeof(object), typeof(PopupContentView));
         public static readonly BindableProperty OnHideCommandProperty = BindableProperty.Create(nameof(OnHideCommand), typeof(ICommand), typeof(PopupContentView));
         public static readonly BindableProperty OnHideCommandParameterProperty = BindableProperty.Create(nameof(OnHideCommandParameter), typeof(object), typeof(PopupContentView));
+        public static readonly BindablePropertyKey ShowCommandPropertyKey = BindableProperty.CreateReadOnly(nameof(ShowCommand), typeof(ICommand), typeof(PopupContentView), null, defaultValueCreator: (b) =>
+        {
+            PopupContentView popupContentView = (PopupContentView)b;
+            return new Command(popupContentView.Show);
+        });
+        public static readonly BindableProperty ShowCommandProperty = ShowCommandPropertyKey.BindableProperty;
+        public static readonly BindablePropertyKey HideCommandPropertyKey = BindableProperty.CreateReadOnly(nameof(HideCommand), typeof(ICommand), typeof(PopupContentView), null, defaultValueCreator: (b) =>
+        {
+            PopupContentView popupContentView = (PopupContentView)b;
+            return new Command(popupContentView.Hide);
+        });
+        public static readonly BindableProperty HideCommandProperty = HideCommandPropertyKey.BindableProperty;
+        public static readonly BindablePropertyKey ToggleCommandPropertyKey = BindableProperty.CreateReadOnly(nameof(ToggleCommand), typeof(ICommand), typeof(PopupContentView), null, defaultValueCreator: (b) =>
+        {
+            PopupContentView popupContentView = (PopupContentView)b;
+            return new Command(popupContentView.Toggle);
+        });
+        public static readonly BindableProperty ToggleCommandProperty = ToggleCommandPropertyKey.BindableProperty;
+        public static readonly BindableProperty FadeBackgroundProperty = BindableProperty.Create(nameof(FadeBackground), typeof(bool), typeof(PopupContentView), true);
+        public static readonly BindableProperty CloseOnBackgroundTapProperty = BindableProperty.Create(nameof(CloseOnBackgroundTap), typeof(bool), typeof(PopupContentView), true);
 
         public bool IsPresented
         {
@@ -54,21 +74,31 @@ namespace XFFormsControls.Controls
         }
 
         public Popup Popup { get; internal set; } = null;
-        public Command ShowCommand { get; }
-        public Command HideCommand { get; }
-        public Command ToggleCommand { get; }
+        public ICommand ShowCommand { get => (ICommand)GetValue(ShowCommandProperty); }
+        public ICommand HideCommand { get => (ICommand)GetValue(HideCommandProperty); }
+        public ICommand ToggleCommand { get => (ICommand)GetValue(ToggleCommandProperty); }
+
+        public bool CloseOnBackgroundTap
+        {
+            get => (bool)GetValue(CloseOnBackgroundTapProperty);
+            set => SetValue(CloseOnBackgroundTapProperty, value);
+        }
+
+        public bool FadeBackground
+        {
+            get => (bool)GetValue(FadeBackgroundProperty);
+            set => SetValue(FadeBackgroundProperty, value);
+        }
 
 
         public event EventHandler OnPopupShow;
         public event EventHandler OnPopupHide;
 
+        private readonly Lazy<PlatformConfigurationRegistry<PopupContentView>> _platformConfigurationRegistry;
+
         public PopupContentView() : base()
         {
-            ShowCommand = new Command(Show);
-            HideCommand = new Command(Hide);
-            ToggleCommand = new Command(Toggle);
-
-            IsClippedToBounds = true;
+            _platformConfigurationRegistry = new Lazy<PlatformConfigurationRegistry<PopupContentView>>(() => new PlatformConfigurationRegistry<PopupContentView>(this));
         }
 
         public void Show()
@@ -100,7 +130,10 @@ namespace XFFormsControls.Controls
             OnPopupShow?.Invoke(this, EventArgs.Empty);
             if (TransitionAnimation != null)
             {
-                TransitionAnimation.GetAnimation(this).Commit(this, AnimationName);
+                TransitionAnimation.GetAnimation(this)?.Commit(this, AnimationName, length: TransitionAnimation.Length, finished: (f, b) =>
+                {
+                    TransitionAnimation.OnFinished(this);
+                });
             }
         }
 
@@ -111,6 +144,19 @@ namespace XFFormsControls.Controls
                 OnHideCommand.Execute(null);
             }
             OnPopupHide?.Invoke(this, EventArgs.Empty);
+            Animation anim = TransitionAnimation?.GetBackwardAnimation(this);
+            if (anim != null)
+            {
+                anim.Commit(this, AnimationName, length: TransitionAnimation.Length, finished: (f, b) =>
+                {
+                    IsVisible = false;
+                    TransitionAnimation.OnFinished(this);
+                });
+            }
+            else
+            {
+                IsVisible = false;
+            }
         }
 
         private static void OnIsPresentedChanged(BindableObject bindable, object oldValue, object newValue)
@@ -121,6 +167,7 @@ namespace XFFormsControls.Controls
             {
                 if ((bool)newValue)
                 {
+                    popup.IsVisible = true;
                     popup.Popup.Show(popup);
                 }
                 else

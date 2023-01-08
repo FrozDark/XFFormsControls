@@ -22,7 +22,6 @@ namespace XFFormsControls.Controls
         public override Animation GetAnimation(View slide)
         {
             WeakReference<View> weakView = new WeakReference<View>(slide);
-            return new Animation(UpdateProperty, From, To, Easing ?? Easing.Linear);
             void UpdateProperty(double f)
             {
                 if (weakView.TryGetTarget(out View target))
@@ -30,6 +29,20 @@ namespace XFFormsControls.Controls
                     target.Opacity = f;
                 }
             }
+            return new Animation(UpdateProperty, From, To, Easing ?? Easing.Linear);
+        }
+
+        public override Animation GetBackwardAnimation(View slide)
+        {
+            WeakReference<View> weakView = new WeakReference<View>(slide);
+            void UpdateProperty(double f)
+            {
+                if (weakView.TryGetTarget(out View target))
+                {
+                    target.Opacity = f;
+                }
+            }
+            return new Animation(UpdateProperty, slide.Opacity, From, Easing ?? Easing.Linear);
         }
 
         public override void OnFinished(View slide)
